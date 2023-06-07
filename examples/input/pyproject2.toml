@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "project 2"
+version = "1.6.0"
+description = "Some words"
+authors = ["Me"]
+
+[tool.poetry.dependencies]
+"pdfminer.six" = "^2022333333334"
+torch = { version = "1.10.1+cu113", source = "pytorch" }
+torchvision = { version = "0.11.2+cu113", source = "pytorch" }
+other_package = "2"
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^1.5"
+black = "~21.8b0"
+pytest-django = "^4.5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

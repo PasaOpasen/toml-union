@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "project 1"
+version = "1.6.0"
+description = "Some words"
+authors = ["Somebody"]
+
+[tool.poetry.dependencies]
+"pdfminer.six" = "^20220524"
+ansi2html = "^1.7"
+beautifulsoup4 = "^4.10.0"
+boto3 = "^1.16.56"
+chardet = "^4.0.0"
+Django = "~3.1"
+django-allauth = "^0.51"
+django-rosetta = "^0.9.5"
+djangorestframework = "3.13.1"
+cmake = "~3.21.1"
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = ">=1.5.6"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
