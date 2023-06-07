@@ -216,16 +216,36 @@ def union_dicts(dicts: Iterable[TOML_DICT]) -> DATA_DICT:
     return dct
 
 
+def override_param(dct: DATA_DICT, route: str, value: Union[str, List[str]]):
+    """
+    performs override operation
+    Args:
+        dct: target dict
+        route: path to value like dct1.dct2.dct3.key
+        value: value to put
+
+    """
+
+    if '.' not in route:  # no steps inside, perform main action
+        dct[route] = TomlValue.from_value(value, -1)
+        return
+
+    key, rt = route.split('.', maxsplit=1)
+    if key not in dct:
+        dct[key] = {}
+    override_param(dct[key], rt, value)
+
+
 #endregion
 
 
 #region MAIN
 
-#TODO add overrides     -1 file, no conflict
 def poetry_union_process(
     files: Iterable[Union[str, os.PathLike]],
     outfile: Union[str, os.PathLike],
-    report: Optional[Union[str, os.PathLike]] = None
+    report: Optional[Union[str, os.PathLike]] = None,
+    **overrides
 ) -> None:
     """
     Union several toml files to one
@@ -234,9 +254,10 @@ def poetry_union_process(
         files: input files
         outfile: result file
         report: file to report in case of conflicts, None means disable
+        overrides: kwargs to override something in result file in form
+            "dct1.dct2.key": "value"
 
     """
-
 
     files = list(files)
 
@@ -244,6 +265,10 @@ def poetry_union_process(
         read_toml(file) for file in files
     )
     """result wide data dict"""
+
+    # override result params
+    for k, v in overrides.items():
+        override_param(datas, k, v)
 
     outdict = to_dict(datas)
     """result shortened dict"""
