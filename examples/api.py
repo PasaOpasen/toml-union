@@ -12,6 +12,7 @@ if __name__ == '__main__':
         report='report.json',
 
         **{
-            'tool.poetry.version': "12"
+            'tool.poetry.name': 'union',
+            'tool.poetry.version': '12'
         }
     )
