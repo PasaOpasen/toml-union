@@ -1,12 +1,15 @@
 
 from typing import Dict, Any, List, Union, Iterable, Callable, Optional
 
+import sys
 import os
 from pathlib import Path
 import copy
 import json
 from dataclasses import dataclass
 from functools import reduce
+
+import argparse
 
 import toml
 
@@ -241,7 +244,7 @@ def override_param(dct: DATA_DICT, route: str, value: Union[str, List[str]]):
 
 #region MAIN
 
-def poetry_union_process(
+def toml_union_process(
     files: Iterable[Union[str, os.PathLike]],
     outfile: Union[str, os.PathLike],
     report: Optional[Union[str, os.PathLike]] = None,
@@ -304,11 +307,80 @@ def poetry_union_process(
 
 #region CLI
 
+class kvdictAppendAction(argparse.Action):
+    """
+    argparse action to split an argument into KEY=VALUE form
+    on the first = and append to a dictionary.
+    """
+    def __call__(self, parser, args, values, option_string=None):
+        assert(len(values) == 1)
+        try:
+            (k, v) = values[0].split("=", 2)
+        except ValueError as ex:
+            raise argparse.ArgumentError(self, f"could not parse argument \"{values[0]}\" as k=v format")
+        d = getattr(args, self.dest) or {}
+        d[k] = v
+        setattr(args, self.dest, d)
+
+
+parser = argparse.ArgumentParser(
+    prog='poetry-union',
+    description='Combines several toml files to one with conflicts showing',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter
+)
+
+
+parser.add_argument(
+    'INPUT', action='store', type=str, nargs='+',
+    help='input toml files paths',
+)
+parser.add_argument(
+    '--output', '-o', action='store', type=str,
+    help='output toml file path',
+    dest='outfile'
+)
+parser.add_argument(
+    '--report', '-r', action='store', type=str, default=None,
+    help='path to report json on failure'
+)
+
+parser.add_argument(
+    "--keyvalue", "-k",
+    nargs=1,
+    action=kvdictAppendAction,
+    metavar="KEY=VALUE",
+    default={},
+    type=str,
+    help="Add key/value params. May appear multiple times",
+    dest='kwargs'
+)
+
+
+def main():
+
+    sys.path.append(
+        os.path.dirname(os.getcwd())
+    )
+
+    args = sys.argv[1:]
+
+    parsed = parser.parse_args(args)
+
+    toml_union_process(
+        parsed.INPUT,
+        outfile=parsed.outfile,
+        report=parsed.report,
+        **parsed.kwargs
+    )
+
+    print()
+
 
 #endregion
 
 
-
+if __name__ == '__main__':
+    main()
 
 
 
