@@ -285,6 +285,8 @@ def toml_union_process(
             toml_files.extend(
                 p.rglob('*.toml')
             )
+    
+    assert toml_files, f"no such *.toml files in {files}"
 
 
     datas: DATA_DICT = union_dicts(
