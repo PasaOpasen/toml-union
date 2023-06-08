@@ -36,3 +36,13 @@ docker cp ${container}:/out $target
 
 echo "Results in ${target}:"
 ls -lah $target
+
+echo -e '\n\n'
+
+report=${target}/report.json
+if [ -f "${report}" ]
+then
+    echo there r some toml conflicts, take a look at file ${report}
+else
+    echo no conflicts
+fi
