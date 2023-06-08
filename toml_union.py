@@ -112,6 +112,17 @@ DATA_DICT = Union[
 
 #region UTILS
 
+def sort_dict(dct: TOML_DICT) -> TOML_DICT:
+    res = {}
+    for k in sorted(
+        dct.keys(),
+        key=lambda s: ('-' if '.' in s else '') + s.lower()
+    ):
+        v = dct[k]
+        res[k] = sort_dict(v) if isinstance(v, dict) else v
+    return res
+
+
 def mkdir_of_file(file_name: Union[str, os.PathLike]):
     Path(file_name).parent.mkdir(parents=True, exist_ok=True)
 
@@ -125,13 +136,16 @@ def read_toml(file_name: Union[str, os.PathLike]) -> TOML_DICT:
 def write_toml(file_name: Union[str, os.PathLike], data: TOML_DICT):
     mkdir_of_file(file_name)
     with open(file_name, 'w', encoding='utf-8') as f:
-        toml.dump(data, f)
+        toml.dump(
+            sort_dict(data),
+            f
+        )
 
 
 def write_json(file_name: Union[str, os.PathLike], data: TOML_DICT):
     mkdir_of_file(file_name)
     with open(file_name, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2)
+        json.dump(data, f, indent=2, sort_keys=True)
 
 
 def to_data_dict(dct: TOML_DICT, index: int = 0) -> DATA_DICT:
