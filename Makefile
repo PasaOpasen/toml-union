@@ -8,3 +8,6 @@ run:
 push:
 	docker tag toml-union pasaopasen/toml-union:latest
 	docker push pasaopasen/toml-union:latest
+
+test:
+	cd examples; bash docker-test.sh
