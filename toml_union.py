@@ -268,7 +268,7 @@ def toml_union_process(
     Union several toml files to one
 
     Args:
-        files: input files
+        files: input files or folders with them
         outfile: result file
         report: file to report in case of conflicts, None means disable
         overrides: kwargs to override something in result file in form
@@ -276,10 +276,19 @@ def toml_union_process(
 
     """
 
-    files = list(files)
+    toml_files = []
+    for f in files:
+        p = Path(f)
+        if p.is_file():
+            toml_files.append(p)
+        else:
+            toml_files.extend(
+                p.rglob('*.toml')
+            )
+
 
     datas: DATA_DICT = union_dicts(
-        read_toml(file) for file in files
+        read_toml(file) for file in toml_files
     )
     """result wide data dict"""
 
@@ -293,7 +302,7 @@ def toml_union_process(
 
     if report:
         index_file_map: List[str] = [
-            str(f) for i, f in enumerate(files)
+            str(f) for i, f in enumerate(toml_files)
         ]
 
         conflict: bool = False
