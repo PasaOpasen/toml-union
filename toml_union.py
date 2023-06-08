@@ -253,6 +253,19 @@ def override_param(dct: DATA_DICT, route: str, value: Union[str, List[str]]):
     override_param(dct[key], rt, value)
 
 
+def remove_field(dct: Dict, route: str):
+    """removes the field on this route from the dict"""
+
+    if '.' not in route:  # no steps inside, perform main action
+        dct.pop(route, None)  # remove this key from dict
+        return
+
+    key, rt = route.split('.', maxsplit=1)
+    if key in dct:  # go deeper and remove tail in subdictionary
+        remove_field(dct[key], rt)
+
+
+
 #endregion
 
 
@@ -262,6 +275,7 @@ def toml_union_process(
     files: Iterable[Union[str, os.PathLike]],
     outfile: Union[str, os.PathLike],
     report: Optional[Union[str, os.PathLike]] = None,
+    remove_fields: Optional[Iterable[str]] = None,
     **overrides
 ) -> None:
     """
@@ -271,6 +285,8 @@ def toml_union_process(
         files: input files or folders with them
         outfile: result file
         report: file to report in case of conflicts, None means disable
+        remove_fields: some fields like d1.d2.d3, toml.build and so on -- to remove from target file,
+            works before overrides
         overrides: kwargs to override something in result file in form
             "dct1.dct2.key": "value"
 
@@ -293,6 +309,11 @@ def toml_union_process(
         read_toml(file) for file in toml_files
     )
     """result wide data dict"""
+
+    remove_fields = remove_fields or []
+    if remove_fields:
+        for r in remove_fields:
+            remove_field(datas, r)
 
     # override result params
     for k, v in overrides.items():
@@ -370,6 +391,15 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--remove-field", "-e",
+    nargs='*',
+    action='store',
+    type=str,
+    help="Fields to remove. May appear multiple times",
+    dest='remove_fields'
+)
+
+parser.add_argument(
     "--keyvalue", "-k",
     nargs=1,
     action=kvdictAppendAction,
@@ -395,6 +425,7 @@ def main():
         parsed.INPUT,
         outfile=parsed.outfile,
         report=parsed.report,
+        remove_fields=parsed.remove_fields,
         **parsed.kwargs
     )
 
