@@ -393,7 +393,7 @@ parser.add_argument(
 parser.add_argument(
     "--remove-field", "-e",
     nargs='*',
-    action='store',
+    action='extend',
     type=str,
     help="Fields to remove. May appear multiple times",
     dest='remove_fields'
