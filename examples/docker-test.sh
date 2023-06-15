@@ -4,6 +4,7 @@
 #
 
 container=TOML_UNION
+IMAGE=pasaopasen/toml-union
 target=./tmp/out
 
 #
@@ -16,7 +17,7 @@ docker container rm ${container}  || true
 #
 docker run -it --name ${container}  \
     -v "$(pwd)"/input:/toml_union/input \
-    pasaopasen/toml-union \
+    ${IMAGE} \
     python toml_union.py ./input -o /out/output.toml -r /out/report.json \
         -k tool.poetry.name=union \
         -k tool.poetry.version=12
