@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import copy
 import json
+from collections import defaultdict
 from dataclasses import dataclass
 from functools import reduce
 
@@ -112,6 +113,14 @@ DATA_DICT = Union[
 
 #region UTILS
 
+SEP = '___'
+"""list to dicts separator"""
+
+
+def mkdir_of_file(file_name: Union[str, os.PathLike]):
+    Path(file_name).parent.mkdir(parents=True, exist_ok=True)
+
+
 def sort_dict(dct: TOML_DICT) -> TOML_DICT:
     res = {}
     for k in sorted(
@@ -123,23 +132,89 @@ def sort_dict(dct: TOML_DICT) -> TOML_DICT:
     return res
 
 
-def mkdir_of_file(file_name: Union[str, os.PathLike]):
-    Path(file_name).parent.mkdir(parents=True, exist_ok=True)
+def disable_lists_dict(dct: TOML_DICT) -> TOML_DICT:
+    """
+    replace constructions like
+
+        [[tool.poetry.source]]
+        name = "pytorch"
+        priority = "explicit"
+
+        [[tool.poetry.source]]
+        name = "PyPI"
+        priority = "primary"
+
+    to something like this:
+        [tool.poetry.source___pytorch]
+        priority = "explicit"
+
+        [tool.poetry.source___PyPI]
+        priority = "primary"
+    """
+
+    def process(data: TOML_DICT) -> TOML_DICT:
+        d = copy.deepcopy(data)
+
+        for k, v in data.items():
+            if isinstance(v, list) and isinstance(v[0], dict):  # it is the list of dicts
+                new_dicts = {
+                    f"{k}{SEP}{item['name']}": process({_k: _v for _k, _v in item.items() if _k != 'name'})
+                    for item in v
+                }
+                """new dict with processed dicts of list items with updated names"""
+                d.pop(k)
+                d.update(new_dicts)
+            elif isinstance(v, dict):  # go deeper
+                d[k] = process(v)
+
+        return d
+
+    return process(dct)
+
+
+def enable_lists_dicts(dct: TOML_DICT) -> TOML_DICT:
+    """reverses disable_lists_dict effect"""
+
+    def process(data: TOML_DICT) -> TOML_DICT:
+        d = copy.deepcopy(data)
+
+        list_dicts: Dict[str, List[TOML_DICT]] = defaultdict(list)
+        """recovered dictionaries which contain lists of dicts"""
+
+        for k, v in data.items():
+
+            if isinstance(v, dict):
+                v = process(v)  # go deeper
+                if SEP in k:  # move to storage
+                    parent, name = k.split(SEP, 1)
+                    v['name'] = name
+                    list_dicts[parent].append(v)
+                    d.pop(k)  # remove this version from result
+                else:  # just keep in result
+                    d[k] = v
+
+        d.update(dict(list_dicts))
+
+        return d
+
+    return process(dct)
 
 
 def read_toml(file_name: Union[str, os.PathLike]) -> TOML_DICT:
     with open(file_name, 'r', encoding='utf-8') as f:
         content = toml.load(f)
-        return content
+
+    content = disable_lists_dict(content)
+
+    return content
 
 
 def write_toml(file_name: Union[str, os.PathLike], data: TOML_DICT):
     mkdir_of_file(file_name)
+    data = enable_lists_dicts(data)
+    data = sort_dict(data)
     with open(file_name, 'w', encoding='utf-8') as f:
-        toml.dump(
-            sort_dict(data),
-            f
-        )
+        toml.dump(data, f)
 
 
 def write_json(file_name: Union[str, os.PathLike], data: TOML_DICT):
