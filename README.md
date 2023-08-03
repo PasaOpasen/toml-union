@@ -7,7 +7,7 @@
 
 # About
 
-This script combines several `*.toml` files (usially `pyproject.toml`) into one. If it finds some conflict between items, they are kept later manual view.
+This script combines several `*.toml` files (usially `pyproject.toml`) into one. If it finds some conflict between items, they are kept for manual review.
 
 It has docker example: `docker pull pasaopasen/toml-union`
 
