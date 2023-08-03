@@ -9,7 +9,7 @@
 
 This script combines several `*.toml` files (usially `pyproject.toml`) into one. If it finds some conflict between items, they are kept for manual review.
 
-It has docker example: `docker pull pasaopasen/toml-union`
+It has a docker image (`docker pull pasaopasen/toml-union`) and an [example](/examples/docker-test.sh) of its usage.
 
 ## Python usage example
 
@@ -202,7 +202,7 @@ python toml_union.py examples/input/file1.toml examples/input/file2.toml example
 
 Help message:
 
-```
+```sh
 usage: poetry-union [-h] [--output OUTFILE] [--report REPORT] [--remove-field [REMOVE_FIELDS [REMOVE_FIELDS ...]]] [--keyvalue KEY=VALUE] INPUT [INPUT ...]
                                                                                                                                                            
 Combines several toml files to one with conflicts showing                                                                                                  
