@@ -308,24 +308,37 @@ def union_dicts(dicts: Iterable[TOML_DICT]) -> DATA_DICT:
     return dct
 
 
-def override_param(dct: DATA_DICT, route: str, value: Union[str, List[str]]):
+def override_param(
+    dct: DATA_DICT,
+    route: str,
+    value: Union[str, List[str]],
+    only_on_conflict: bool = False
+):
     """
     performs override operation
     Args:
         dct: target dict
         route: path to value like dct1.dct2.dct3.key
         value: value to put
+        only_on_conflict: perform operation only on conflict in the param
 
     """
 
     if '.' not in route:  # no steps inside, perform main action
+        if (
+            only_on_conflict and
+            (route not in dct or len(dct[route].map) < 2)
+        ):  # do not override if no conflicts there
+            return
         dct[route] = TomlValue.from_value(value, -1)
         return
 
     key, rt = route.split('.', maxsplit=1)
     if key not in dct:
+        if only_on_conflict:  # break the operation
+            return
         dct[key] = {}
-    override_param(dct[key], rt, value)
+    override_param(dct[key], rt, value, only_on_conflict=only_on_conflict)
 
 
 def remove_field(dct: Dict, route: str):
@@ -350,7 +363,8 @@ def toml_union_process(
     outfile: Union[str, os.PathLike],
     report: Optional[Union[str, os.PathLike]] = None,
     remove_fields: Optional[Iterable[str]] = None,
-    overrides: Dict[str, Any] = None
+    overrides: Dict[str, Any] = None,
+    overrides_on_conflicts: Dict[str, Any] = None,
 ) -> None:
     """
     Union several toml files to one
@@ -363,6 +377,7 @@ def toml_union_process(
             works before overrides
         overrides: kwargs to override something in result file in form
             "dct1.dct2.key": "value"
+        overrides_on_conflicts: same as overrides but will be performed only on conflict fields
 
     """
 
@@ -392,6 +407,10 @@ def toml_union_process(
         # override result params
         for k, v in overrides.items():
             override_param(datas, k, v)
+
+    if overrides_on_conflicts:
+        for k, v in overrides_on_conflicts.items():
+            override_param(datas, k, v, only_on_conflict=True)
 
     outdict = to_dict(datas)
     """result shortened dict"""
@@ -486,6 +505,17 @@ parser.add_argument(
     dest='overrides_kwargs'
 )
 
+parser.add_argument(
+    "--ckey-value", "-c",
+    nargs=1,
+    action=kvdictAppendAction,
+    metavar="KEY=VALUE",
+    default={},
+    type=str,
+    help="Same as --key-value but will be performed only on conflict cases",
+    dest='overrides_kwargs_conflict'
+)
+
 
 def main():
 
@@ -502,7 +532,8 @@ def main():
         outfile=parsed.outfile,
         report=parsed.report,
         remove_fields=parsed.remove_fields,
-        overrides=parsed.overrides_kwargs
+        overrides=parsed.overrides_kwargs,
+        overrides_on_conflicts=parsed.overrides_kwargs_conflict
     )
 
     print()
