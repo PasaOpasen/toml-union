@@ -1,4 +1,6 @@
 
+VERSION=3
+
 build:
 	docker build --target toml_union -t toml-union "."
 
@@ -8,8 +10,8 @@ run:
 push:
 	docker tag toml-union pasaopasen/toml-union:latest
 	docker push pasaopasen/toml-union:latest
-	docker tag toml-union pasaopasen/toml-union:2
-	docker push pasaopasen/toml-union:2
+	docker tag toml-union pasaopasen/toml-union:$(VERSION)
+	docker push pasaopasen/toml-union:$(VERSION)
 
 test:
 	cd examples; bash docker-test.sh
