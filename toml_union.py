@@ -340,7 +340,6 @@ def remove_field(dct: Dict, route: str):
         remove_field(dct[key], rt)
 
 
-
 #endregion
 
 
@@ -351,7 +350,7 @@ def toml_union_process(
     outfile: Union[str, os.PathLike],
     report: Optional[Union[str, os.PathLike]] = None,
     remove_fields: Optional[Iterable[str]] = None,
-    **overrides
+    overrides: Dict[str, Any] = None
 ) -> None:
     """
     Union several toml files to one
@@ -379,7 +378,6 @@ def toml_union_process(
     
     assert toml_files, f"no such *.toml files in {files}"
 
-
     datas: DATA_DICT = union_dicts(
         read_toml(file) for file in toml_files
     )
@@ -390,9 +388,10 @@ def toml_union_process(
         for r in remove_fields:
             remove_field(datas, r)
 
-    # override result params
-    for k, v in overrides.items():
-        override_param(datas, k, v)
+    if overrides:
+        # override result params
+        for k, v in overrides.items():
+            override_param(datas, k, v)
 
     outdict = to_dict(datas)
     """result shortened dict"""
@@ -412,8 +411,8 @@ def toml_union_process(
             res = obj.to_json()
             if isinstance(res, dict):
                 res = {
-                    k: [index_file_map[vv] for vv in v]
-                    for k, v in res.items()
+                    _k: [index_file_map[vv] for vv in _v]
+                    for _k, _v in res.items()
                 }
                 conflict = True  # set flag about conflict
             return res
@@ -438,7 +437,9 @@ class kvdictAppendAction(argparse.Action):
         try:
             (k, v) = values[0].split("=", 2)
         except ValueError as ex:
-            raise argparse.ArgumentError(self, f"could not parse argument \"{values[0]}\" as k=v format")
+            raise argparse.ArgumentError(
+                self, f"could not parse argument \"{values[0]}\" as k=v format"
+            )
         d = getattr(args, self.dest) or {}
         d[k] = v
         setattr(args, self.dest, d)
@@ -475,14 +476,14 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--keyvalue", "-k",
+    "--key-value", "-k",
     nargs=1,
     action=kvdictAppendAction,
     metavar="KEY=VALUE",
     default={},
     type=str,
     help="Add key/value params. May appear multiple times",
-    dest='kwargs'
+    dest='overrides_kwargs'
 )
 
 
@@ -501,7 +502,7 @@ def main():
         outfile=parsed.outfile,
         report=parsed.report,
         remove_fields=parsed.remove_fields,
-        **parsed.kwargs
+        overrides=parsed.overrides_kwargs
     )
 
     print()
