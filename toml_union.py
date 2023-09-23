@@ -381,6 +381,10 @@ def toml_union_process(
 
     """
 
+    assert files
+    if isinstance(files, str):
+        files = [files]
+
     toml_files = []
     for f in files:
         p = Path(f)
