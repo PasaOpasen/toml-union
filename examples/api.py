@@ -11,7 +11,7 @@ if __name__ == '__main__':
         outfile='output.toml',
         report='report.json',
 
-        **{
+        overrides={
             'tool.poetry.name': 'union',
             'tool.poetry.version': '12'
         }

@@ -1,6 +1,10 @@
 
 VERSION=3
 
+help:
+	venv/bin/python toml_union.py -h
+
+
 build:
 	docker build --target toml_union -t toml-union "."
 

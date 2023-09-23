@@ -465,7 +465,7 @@ class kvdictAppendAction(argparse.Action):
 
 
 parser = argparse.ArgumentParser(
-    prog='poetry-union',
+    prog=f"{os.path.basename(__file__)}",
     description='Combines several toml files to one with conflicts showing',
     formatter_class=argparse.ArgumentDefaultsHelpFormatter
 )

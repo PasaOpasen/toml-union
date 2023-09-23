@@ -179,7 +179,7 @@ toml_union_process(
     outfile='output.toml',
     report='report.json',
 
-    **{
+    overrides={
         'tool.poetry.name': 'union',
         'tool.poetry.version': '12'
     }
@@ -203,14 +203,17 @@ python toml_union.py examples/input/file1.toml examples/input/file2.toml example
 Help message:
 
 ```sh
-usage: poetry-union [-h] [--output OUTFILE] [--report REPORT] [--remove-field [REMOVE_FIELDS [REMOVE_FIELDS ...]]] [--keyvalue KEY=VALUE] INPUT [INPUT ...]
-                                                                                                                                                           
-Combines several toml files to one with conflicts showing                                                                                                  
-                                                                                                                                                           
-positional arguments:                                                                                                                                      
-  INPUT                 input toml files paths                                                                                                             
-                                                                                                                                                           
-optional arguments:                                                                                                                                        
+venv/bin/python toml_union.py -h
+usage: toml_union.py [-h] [--output OUTFILE] [--report REPORT] [--remove-field [REMOVE_FIELDS [REMOVE_FIELDS ...]]]
+                     [--key-value KEY=VALUE] [--ckey-value KEY=VALUE]
+                     INPUT [INPUT ...]
+
+Combines several toml files to one with conflicts showing
+
+positional arguments:
+  INPUT                 input toml files paths
+
+optional arguments:
   -h, --help            show this help message and exit
   --output OUTFILE, -o OUTFILE
                         output toml file path (default: None)
@@ -218,7 +221,8 @@ optional arguments:
                         path to report json on failure (default: None)
   --remove-field [REMOVE_FIELDS [REMOVE_FIELDS ...]], -e [REMOVE_FIELDS [REMOVE_FIELDS ...]]
                         Fields to remove. May appear multiple times (default: None)
-  --keyvalue KEY=VALUE, -k KEY=VALUE
+  --key-value KEY=VALUE, -k KEY=VALUE
                         Add key/value params. May appear multiple times (default: {})
-
+  --ckey-value KEY=VALUE, -c KEY=VALUE
+                        Same as --key-value but will be performed only on conflict cases (default: {})
 ```
