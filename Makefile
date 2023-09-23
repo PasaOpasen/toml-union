@@ -19,3 +19,6 @@ push:
 
 test:
 	cd examples; bash docker-test.sh
+
+pytest:
+	venv/bin/python -m pytest ./tests

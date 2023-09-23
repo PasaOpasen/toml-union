@@ -31,6 +31,9 @@ class TomlValue:
     in perfect case it has only one item
     """
 
+    def __len__(self):
+        return len(self.map)
+
     @staticmethod
     def from_value(value: str, index: int):
         """initial constructor"""
@@ -327,7 +330,10 @@ def override_param(
     if '.' not in route:  # no steps inside, perform main action
         if (
             only_on_conflict and
-            (route not in dct or len(dct[route].map) < 2)
+            (
+                route not in dct or
+                len(dct[route]) < 2
+            )
         ):  # do not override if no conflicts there
             return
         dct[route] = TomlValue.from_value(value, -1)

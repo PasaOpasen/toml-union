@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "project 1"
+version = "1.6.0"
+description = "Some words"
+authors = ["Me"]
+
+[tool.poetry.dependencies]
+"pdfminer.six" = "^20220524"
+cmake = "^3.21.1"
+other_package = "1"
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^1.5"
+black = "~21.8b0"
+ipython = "^8.0"
+pylint-django = "^2.3.0"
+pytest-django = "^4.5.2"
