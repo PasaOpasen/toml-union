@@ -159,7 +159,7 @@ def disable_lists_dict(dct: TOML_DICT) -> TOML_DICT:
         d = copy.deepcopy(data)
 
         for k, v in data.items():
-            if isinstance(v, list) and isinstance(v[0], dict):  # it is the list of dicts
+            if isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):  # it is the list of dicts
                 new_dicts = {
                     f"{k}{SEP}{item['name']}": process({_k: _v for _k, _v in item.items() if _k != 'name'})
                     for item in v
