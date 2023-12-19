@@ -244,7 +244,7 @@ def to_data_dict(dct: TOML_DICT, index: int = 0) -> DATA_DICT:
         if isinstance(value, dict):  # go deeper
             result[key] = to_data_dict(value, index)
         else:
-            assert isinstance(value, (list, str)), f"unexpected value {value} type: {type(value)}"
+            assert isinstance(value, (list, str, int)), f"unexpected value {value} type: {type(value)}"
 
             if isinstance(value, list):
                 result[key] = [
