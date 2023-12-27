@@ -17,7 +17,7 @@ push:
 	docker tag toml-union pasaopasen/toml-union:$(VERSION)
 	docker push pasaopasen/toml-union:$(VERSION)
 
-test:
+docker-test:
 	cd examples; bash docker-test.sh
 
 doctest:

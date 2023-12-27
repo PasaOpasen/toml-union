@@ -10,7 +10,7 @@ target=./tmp/out
 #
 # remove previous container
 #
-docker container rm ${container}  || true
+docker container rm ${container} 2> /dev/null  || true
 
 #
 # mount and run
