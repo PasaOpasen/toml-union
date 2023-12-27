@@ -162,12 +162,25 @@ def mkdir_of_file(file_name: Union[str, os.PathLike]):
     Path(file_name).parent.mkdir(parents=True, exist_ok=True)
 
 
+def _sorter_key(s: str) -> str:
+    """key function for dict keys sort"""
+    return ('-' if '.' in s else '') + s.lower()
+
+
 def sort_dict(dct: TOML_DICT) -> TOML_DICT:
+    """
+    performs dictionary deep sort
+    Args:
+        dct:
+
+    Returns:
+        sorted dictionary
+
+    >>> sort_dict({'1': 2, 'a': [3, 4], 'a.b': {'2': [3, 5], '1': 3}, 'c': ['a', 'b']})
+    {'a.b': {'1': 3, '2': [3, 5]}, '1': 2, 'a': [3, 4], 'c': ['a', 'b']}
+    """
     res = {}
-    for k in sorted(
-        dct.keys(),
-        key=lambda s: ('-' if '.' in s else '') + s.lower()
-    ):
+    for k in sorted(dct.keys(), key=_sorter_key):
         v = dct[k]
         res[k] = sort_dict(v) if isinstance(v, dict) else v
     return res
@@ -191,6 +204,9 @@ def disable_lists_dict(dct: TOML_DICT) -> TOML_DICT:
 
         [tool.poetry.source___PyPI]
         priority = "primary"
+
+    Notes:
+        extracts dict using 'name' field
     """
 
     def process(data: TOML_DICT) -> TOML_DICT:
@@ -198,6 +214,9 @@ def disable_lists_dict(dct: TOML_DICT) -> TOML_DICT:
 
         for k, v in data.items():
             if isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):  # it is the list of dicts
+
+                assert all('name' in item for item in v), v
+
                 new_dicts = {
                     f"{k}{SEP}{item['name']}": process({_k: _v for _k, _v in item.items() if _k != 'name'})
                     for item in v
@@ -214,7 +233,15 @@ def disable_lists_dict(dct: TOML_DICT) -> TOML_DICT:
 
 
 def enable_lists_dicts(dct: TOML_DICT) -> TOML_DICT:
-    """reverses disable_lists_dict effect"""
+    """
+    reverses disable_lists_dict effect
+
+    >>> t = dict(root=[{'name': 'name1', 'other': '1', 'data': 'data1'}, {'name': 'name2', 'other': '2', 'data': 'data2'}])
+    >>> converted = disable_lists_dict(t); converted
+    {'root___name1': {'other': '1', 'data': 'data1'}, 'root___name2': {'other': '2', 'data': 'data2'}}
+    >>> enable_lists_dicts(converted)
+    {'root': [{'other': '1', 'data': 'data1', 'name': 'name1'}, {'other': '2', 'data': 'data2', 'name': 'name2'}]}
+    """
 
     def process(data: TOML_DICT) -> TOML_DICT:
         d = copy.deepcopy(data)
@@ -242,6 +269,7 @@ def enable_lists_dicts(dct: TOML_DICT) -> TOML_DICT:
 
 
 def read_toml(file_name: Union[str, os.PathLike]) -> TOML_DICT:
+    """reads dict from toml with some preprocessing"""
     with open(file_name, 'r', encoding='utf-8') as f:
         content = toml.load(f)
 
@@ -251,6 +279,7 @@ def read_toml(file_name: Union[str, os.PathLike]) -> TOML_DICT:
 
 
 def write_toml(file_name: Union[str, os.PathLike], data: TOML_DICT):
+    """writes dict to toml with some postprocessing"""
     mkdir_of_file(file_name)
     data = enable_lists_dicts(data)
     data = sort_dict(data)
@@ -259,6 +288,7 @@ def write_toml(file_name: Union[str, os.PathLike], data: TOML_DICT):
 
 
 def write_json(file_name: Union[str, os.PathLike], data: TOML_DICT):
+    """writes dict to json without special postprocessing"""
     mkdir_of_file(file_name)
     with open(file_name, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, sort_keys=True)
