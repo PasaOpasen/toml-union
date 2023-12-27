@@ -12,7 +12,7 @@ def test_1():
     result = os.path.join(PROJECT_DIR, 'tmp', 'test1.toml')
 
     toml_union_process(
-        files=os.path.join(CUR_DIR, 'input'),
+        files=os.path.join(CUR_DIR, 'input', 'test_1'),
         outfile=result,
         remove_fields=[
             'build-system',
@@ -28,7 +28,7 @@ def test_1():
     )
 
     d1 = read_toml(result)
-    d2 = read_toml(os.path.join(CUR_DIR, 'output', 'test1.toml'))
+    d2 = read_toml(os.path.join(CUR_DIR, 'output', 'test_1', 'test1.toml'))
 
     assert d1 == d2
 
