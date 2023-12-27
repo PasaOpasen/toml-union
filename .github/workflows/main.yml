@@ -1,0 +1,167 @@
+
+name: Pipeline tests and deploys on Ubuntu
+
+on:
+  push:
+    # branches: 
+    #   - main 
+    #   - dev
+    branches:  # necessary if using tags fields
+      - '**'
+  pull_request:
+    # branches: 
+    #   - main 
+    #   - dev
+  workflow_dispatch: # allows manual triggering
+
+
+jobs:
+
+  #
+  # checks if there are some changes in the important code files
+  #
+  run-pipe-desicion:
+    runs-on: ubuntu-latest
+    
+    outputs:
+        workflows: ${{ steps.filter.outputs.workflows == 'true' }}
+        code: ${{ steps.filter.outputs.code == 'true' || steps.filter.outputs.venv == 'true' || steps.filter.outputs.makefile == 'true' }}
+
+        changes: ${{ steps.filter.outputs.workflows == 'true' || steps.filter.outputs.venv == 'true' || steps.filter.outputs.makefile == 'true' || steps.filter.outputs.code == 'true' }}
+
+        skip_tests: ${{ steps.signs.outputs.SKIP_TESTS == 'yes' }}
+        last_workflow_failed: ${{ steps.last_status.outputs.last_status == 'failure' }}
+
+    steps:
+    - uses: actions/checkout@v3  
+
+    - name: Set environment variables
+      run: |
+        # Short name for current branch. For PRs, use target branch (base ref)
+        GIT_BRANCH=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}
+        echo "GIT_BRANCH=$GIT_BRANCH" >> $GITHUB_ENV
+
+    - name: Info message
+      run: |
+        echo GitHub event = ${{ github.event_name }} on branch ${{ env.GIT_BRANCH }}  
+ 
+    - name: Get previous workflow status
+      uses: Mercymeilya/last-workflow-status@v0.3.3
+      id: last_status
+      with:
+        github_token: ${{ secrets.ACCESS_TOKEN }}        
+
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        base: ${{ github.head_ref || github.ref_name }}  # compare with same branch
+
+        filters: |
+          workflows:
+            - '.github/workflows/main.yml'
+          makefile:
+            - 'Makefile'
+          venv:
+            - 'requirements.txt'
+            - 'requirements-dev.txt'
+          code:
+            - 'toml_union/**'
+    
+    - name: workflow message
+      if: steps.filter.outputs.workflows == 'true'
+      run: echo "Changed python venv workflow"
+
+    - name: venv message
+      if: steps.filter.outputs.venv == 'true'
+      run: echo "Changed venv"
+
+    - name: makefile message
+      if: steps.filter.outputs.makefile == 'true'
+      run: echo "Changed Makefile or make scripts"
+      
+    - name: code message
+      if: steps.filter.outputs.code == 'true'
+      run: echo "Changed backend code"
+
+    - name: check commit message for signs
+      id: signs
+      run: |
+        if [ '${{ github.event_name }}' == 'push' ]; then
+          message="${{ github.event.head_commit.message }}"
+        else
+          message="${{ github.event.pull_request.base.label}}"
+        fi
+
+        echo "commit message: ${message}"
+
+        echo "SKIP_TESTS=no" >> "$GITHUB_OUTPUT"
+        if [ "$(echo ${message} | grep '<>')" != "" ]; then
+          echo "SKIP_TESTS=yes" >> "$GITHUB_OUTPUT"
+          echo "signal of test skipping"
+        fi
+
+
+  build-and-test:
+
+    runs-on: ubuntu-latest
+    needs: run-pipe-desicion
+    if: needs.run-pipe-desicion.outputs.workflows == 'true' || (( needs.run-pipe-desicion.outputs.changes == 'true' || needs.run-pipe-desicion.outputs.last_workflow_failed == 'true' ) && needs.run-pipe-desicion.outputs.skip_tests != 'true' ) 
+    strategy:
+      fail-fast: true
+      matrix:
+        python-version: ["3.8", "3.9"]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install system dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y make 
+        
+        echo "PYTHON_VERSION=$(python --version)" >> $GITHUB_ENV
+   
+    ####################
+    #
+    # INSTALL/CACHE venv
+    #
+    ####################
+
+    - name: Cache venv
+      id: cache-venv
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-venv
+      with:
+        path: venv
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('requirements.txt', 'requirements-dev.txt') }}
+
+    - if: ${{ steps.cache-venv.outputs.cache-hit != 'true' }}
+      name: Create venv
+      run: |
+        rm -rf venv || true
+        python -m venv venv
+        venv/bin/python -m pip install -r requirements-dev.txt
+
+
+    #############
+    #
+    # BASIC TESTS
+    #
+    #############
+
+    - name: doctest
+      run: |
+        make doctest
+
+    - name: pytest
+      run: |
+        make doctest
+
+
+        
