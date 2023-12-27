@@ -20,7 +20,7 @@ RUN python -m pip install -r requirements.txt && \
     python -m pip cache purge && \
     rm -rf ~/.cache
 
-COPY ./toml_union.py /toml_union/
+COPY ./toml_union/toml_union.py /toml_union/
 
 CMD [ "python", "toml_union.py", "-h" ]
 

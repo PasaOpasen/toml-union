@@ -1,7 +1,7 @@
 
 import os
 
-from toml_union import toml_union_process, read_toml, to_dict
+from toml_union import toml_union_process, read_toml
 
 CUR_DIR = os.path.dirname(__file__)
 PROJECT_DIR = os.path.dirname(CUR_DIR)
