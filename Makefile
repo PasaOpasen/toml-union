@@ -38,3 +38,15 @@ wheel-push:
 	bash wheel-push.sh
 
 pypi: wheel wheel-push
+
+
+tag:
+	bash tag.sh
+
+release: 
+	bash increase-version.sh 
+	make pypi 
+	git add .
+	git commit -m 'update to $(shell cat version.txt)'
+	git push
+

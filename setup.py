@@ -1,4 +1,6 @@
 
+from pathlib import Path
+
 import setuptools
 
 
@@ -14,7 +16,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="toml_union", 
-    version="1.0.0",
+    version=Path('version.txt').read_text(encoding='utf-8'),
     author="Demetry Pascal",
     author_email="qtckpuhdsa@gmail.com",
     maintainer='Demetry Pascal',
