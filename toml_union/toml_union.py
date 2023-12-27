@@ -13,6 +13,7 @@ import json
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import reduce
+import tempfile
 
 import argparse
 
@@ -273,6 +274,15 @@ def enable_lists_dicts(dct: TOML_DICT) -> TOML_DICT:
     return process(dct)
 
 
+def read_text(file_name: Union[str, os.PathLike]) -> str:
+    return Path(file_name).read_text(encoding='utf-8')
+
+
+def write_text(file_name: Union[str, os.PathLike], text: str):
+    mkdir_of_file(file_name)
+    Path(file_name).write_text(text, encoding='utf-8')
+
+
 def read_toml(file_name: Union[str, os.PathLike]) -> TOML_DICT:
     """reads dict from toml with some preprocessing"""
     with open(file_name, 'r', encoding='utf-8') as f:
@@ -292,9 +302,9 @@ def write_toml(file_name: Union[str, os.PathLike], data: TOML_DICT, unicode_esca
         toml.dump(data, f)
 
     if unicode_escape:
-        Path(file_name).write_text(
-            Path(file_name).read_text(encoding='utf-8').encode().decode('unicode_escape').replace('"', "'"),
-            encoding='utf-8'
+        write_text(
+            file_name,
+            read_text(file_name).encode().decode('unicode_escape').replace('"', "'")
         )
 
 
@@ -476,7 +486,7 @@ def remove_field(dct: Dict, route: str):
 
 def toml_union_process(
     files: Iterable[Union[str, os.PathLike]],
-    outfile: Union[str, os.PathLike],
+    outfile: Optional[Union[str, os.PathLike]] = None,
     report: Optional[Union[str, os.PathLike]] = None,
     remove_fields: Optional[Iterable[str]] = None,
     overrides: Dict[str, Any] = None,
@@ -536,7 +546,14 @@ def toml_union_process(
 
     outdict = to_dict(datas)
     """result shortened dict"""
-    write_toml(outfile, outdict, unicode_escape=unicode_escape)
+    
+    if outfile is None:
+        _, f = tempfile.mkstemp(prefix='toml-union', text=True)
+        write_toml(f, outdict, unicode_escape=unicode_escape)
+        print(read_text(f))
+        os.unlink(f)
+    else: 
+        write_toml(outfile, outdict, unicode_escape=unicode_escape)
 
     if report:
         index_file_map: List[str] = [
@@ -599,7 +616,7 @@ parser.add_argument(
 )
 parser.add_argument(
     '--output', '-o', action='store', type=str,
-    help='output toml file path',
+    help='output toml file path, empty value means to print to console',
     dest='outfile'
 )
 

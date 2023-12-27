@@ -3,3 +3,7 @@
 
 pytest
 ipython
+
+setuptools
+wheel
+twine

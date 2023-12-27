@@ -1,3 +1,8 @@
+[![PyPI version](https://badge.fury.io/py/toml_union.svg)](https://pypi.org/project/toml_union/)
+[![Downloads](https://pepy.tech/badge/toml_union)](https://pepy.tech/project/toml_union)
+[![Downloads](https://pepy.tech/badge/toml_union/month)](https://pepy.tech/project/toml_union)
+[![Downloads](https://pepy.tech/badge/toml_union/week)](https://pepy.tech/project/toml_union)
+
 
 - [About](#about)
   - [Python usage example](#python-usage-example)
@@ -7,7 +12,11 @@
 
 # About
 
-This script combines several `*.toml` files (usially `pyproject.toml`) into one. If it finds some conflict between items, they are kept for manual review.
+```sh
+pip install toml-union
+```
+
+This PyPI package is located in one script and combines several `*.toml` files (usially `pyproject.toml`) into one. If it finds some conflict between items, they are kept for manual review.
 
 It has a docker image (`docker pull pasaopasen/toml-union`) and an [example](/examples/docker-test.sh) of its usage.
 
@@ -197,13 +206,14 @@ version = "12"
 
 Equivalent CLI command:
 ```sh
-python toml_union.py examples/input/file1.toml examples/input/file2.toml examples/input/file3.toml -o output.toml -r report.json -k tool.poetry.name=union -k tool.poetry.version=12
+toml-union examples/input/file1.toml examples/input/file2.toml examples/input/file3.toml -o output.toml -r report.json -k tool.poetry.name=union -k tool.poetry.version=12
 ```
 
 Help message:
 
 ```sh
-venv/bin/python toml_union.py -h
+toml-union -h
+
 usage: toml_union.py [-h] [--output OUTFILE] [--unicode-escape] [--report REPORT] [--remove-field [REMOVE_FIELDS [REMOVE_FIELDS ...]]] [--key-value KEY=VALUE] [--ckey-value KEY=VALUE] INPUT [INPUT ...]
 
 Combines several toml files to one with conflicts showing
@@ -214,7 +224,7 @@ positional arguments:
 optional arguments:
   -h, --help            show this help message and exit
   --output OUTFILE, -o OUTFILE
-                        output toml file path (default: None)
+                        output toml file path, empty value means to print to console (default: None)
   --unicode-escape, -u  whether to try to escape unicode sequences in the outfile, useful when outfile has many slashes and codes (default: False)
   --report REPORT, -r REPORT
                         path to report json on failure (default: None)
