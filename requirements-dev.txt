@@ -2,3 +2,4 @@
 -r requirements.txt
 
 pytest
+ipython
