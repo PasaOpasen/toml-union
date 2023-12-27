@@ -45,7 +45,7 @@ tag:
 
 release: 
 	bash increase-version.sh 
-	make pypi-package 
+	make pypi-package tag
 	git add .
 	git commit -m 'update to $(shell cat version.txt)'
 	git push
