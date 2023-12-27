@@ -17,11 +17,56 @@ import toml
 
 #region TYPES
 
+def _add_sources_to_dict(dct: Dict[str, List[int]], key: str, value: Union[int, List[int]]):
+    """
+    adds new value-source pair to { value -> sources dict }
+    Args:
+        dct:
+        key:
+        value:
+
+    Returns:
+
+    >>> _ = _add_sources_to_dict
+    >>> d = {}
+    >>> _(d, '1', 1); _(d, '1', 2); _(d, '2', [21, 22]); _(d, '2', 23); _(d, '1', [3]); d
+    {'1': [1, 2, 3], '2': [21, 22, 23]}
+    """
+    if key in dct:
+        if isinstance(value, int):
+            dct[key].append(value)
+        else:
+            dct[key].extend(value)
+    else:
+        if isinstance(value, int):
+            dct[key] = [value]
+        else:
+            dct[key] = value.copy()
+
+
 
 @dataclass
 class TomlValue:
     """
     information about values and their sources
+
+    values creation:
+    >>> t = TomlValue.from_value('a', 0)
+    >>> t.add('a', 1); t.add('b', [1, 2])
+    >>> t
+    TomlValue(map={'a': [0, 1], 'b': [1, 2]})
+    >>> t2 = TomlValue.from_value('b', 4); t2.add('c', 7); t2
+    TomlValue(map={'b': [4], 'c': [7]})
+    >>> t3 = TomlValue.from_value('c', 5); t3.add('d', [4, 5, 6])
+
+    union values with split by unique:
+    >>> TomlValue.union_list([t, t2, t3])
+    [TomlValue(map={'a': [0, 1]}), TomlValue(map={'b': [1, 2, 4]}), TomlValue(map={'c': [7, 5]}), TomlValue(map={'d': [4, 5, 6]})]
+
+    update existing value:
+    >>> t.update(t2); t
+    TomlValue(map={'a': [0, 1], 'b': [1, 2, 4], 'c': [7]})
+
     """
 
     map: Dict[str, List[int]]
@@ -34,6 +79,9 @@ class TomlValue:
     def __len__(self):
         return len(self.map)
 
+    def __str__(self):
+        return ' ; '.join(f"{k} -> {tuple(v)}" for k, v in self.map.items())
+
     @staticmethod
     def from_value(value: str, index: int):
         """initial constructor"""
@@ -41,21 +89,14 @@ class TomlValue:
             {value: [index]}
         )
 
-    def add(self, value: str, index: int):
-        d = self.map
-        if value in d:
-            d[value].append(index)
-        else:
-            d[value] = [index]
+    def add(self, value: str, index: Union[int, List[int]]):
+        _add_sources_to_dict(self.map, value, index)
 
     def update(self, obj: 'TomlValue'):
         """union current value with new"""
         d = self.map
         for v, indexes in obj.map.items():
-            if v in d:
-                d[v] += indexes
-            else:
-                d[v] = indexes
+            _add_sources_to_dict(d, v, indexes)
 
     @staticmethod
     def union_list(items: List['TomlValue']) -> List['TomlValue']:
@@ -75,10 +116,7 @@ class TomlValue:
 
         for it in items:
             for k, v in it.map.items():
-                if k in total_dict:
-                    total_dict[k] += v
-                else:
-                    total_dict[k] = v
+                _add_sources_to_dict(total_dict, k, v)
 
         return [
             TomlValue(

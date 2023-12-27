@@ -20,5 +20,8 @@ push:
 test:
 	cd examples; bash docker-test.sh
 
+doctest:
+	venv/bin/python -m pytest --doctest-modules ./toml_union.py
+
 pytest:
 	venv/bin/python -m pytest ./tests
