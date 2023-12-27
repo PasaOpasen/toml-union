@@ -73,14 +73,15 @@ class TomlValue:
     """
     map: value -> list of its sources
     
-    in perfect case it has only one item
+    in perfect case it has only one item what means that all sources have same value in that field;
+        otherwise there will be conflict and the map will contain information about them
     """
 
     def __len__(self):
         return len(self.map)
 
     def __str__(self):
-        return ' ; '.join(f"{k} -> {tuple(v)}" for k, v in self.map.items())
+        return 'TomlValue  ' + ' ; '.join(f"{k} -> {tuple(v)}" for k, v in self.map.items())
 
     @staticmethod
     def from_value(value: str, index: int):
@@ -296,7 +297,7 @@ def write_json(file_name: Union[str, os.PathLike], data: TOML_DICT):
 
 def to_data_dict(dct: TOML_DICT, index: int = 0) -> DATA_DICT:
     """
-    converts dict to data dict
+    converts usual dict to data dict
 
     Args:
         dct:
@@ -304,6 +305,8 @@ def to_data_dict(dct: TOML_DICT, index: int = 0) -> DATA_DICT:
 
     Returns:
 
+    >>> to_data_dict(dict(a=1, b = [1, 2], c={'d': 3, 'e': [4, 5], 'f': {'g': '6'}}), index = 9)
+    {'a': TomlValue(map={1: [9]}), 'b': [TomlValue(map={1: [9]}), TomlValue(map={2: [9]})], 'c': {'d': TomlValue(map={3: [9]}), 'e': [TomlValue(map={4: [9]}), TomlValue(map={5: [9]})], 'f': {'g': TomlValue(map={'6': [9]})}}}
     """
 
     result: TOML_DICT = {}
@@ -325,7 +328,12 @@ def to_data_dict(dct: TOML_DICT, index: int = 0) -> DATA_DICT:
 
 
 def to_dict(dct: DATA_DICT, converter: Callable[[TomlValue], Any] = TomlValue.to_toml) -> TOML_DICT:
-    """converts data dict to simple toml dict"""
+    """
+    converts data dict to usual toml dict
+
+    >>> d = dict(a=1, b = [1, 2], c={'d': 3, 'e': [4, 5], 'f': {'g': '6'}})
+    >>> assert to_dict(to_data_dict(d)) == d
+    """
     res = {}
 
     for k, v in dct.items():
@@ -340,13 +348,21 @@ def to_dict(dct: DATA_DICT, converter: Callable[[TomlValue], Any] = TomlValue.to
 
 
 def union_2_data_dicts(d1: DATA_DICT, d2: DATA_DICT) -> DATA_DICT:
+    """
+    performs data dicts deep union
+
+    >>> t1 = dict(a=1, b=[2], c={'d': [3, 4]})
+    >>> t2 = dict(b=[3], c={'d': [6, 4], 'e': 8})
+    >>> union_2_data_dicts(to_data_dict(t1, index=-1), to_data_dict(t2, index=-2))
+    {'a': TomlValue(map={1: [-1]}), 'b': [TomlValue(map={2: [-1]}), TomlValue(map={3: [-2]})], 'c': {'d': [TomlValue(map={3: [-1]}), TomlValue(map={4: [-1, -2]}), TomlValue(map={6: [-2]})], 'e': TomlValue(map={8: [-2]})}}
+    """
 
     d1: DATA_DICT = copy.deepcopy(d1)
 
     for key, v2 in d2.items():
         if key in d1:
             v1 = d1[key]
-            assert type(v1) == type(v2), f"incompatible types {v1} and {v2}"
+            assert type(v1) is type(v2), f"incompatible types {v1} and {v2}"
 
             if isinstance(v1, list):
                 d1[key] = TomlValue.union_list(v1 + v2)
@@ -363,6 +379,7 @@ def union_2_data_dicts(d1: DATA_DICT, d2: DATA_DICT) -> DATA_DICT:
 
 
 def union_dicts(dicts: Iterable[TOML_DICT]) -> DATA_DICT:
+    """perform to data dict conversion and data dicts union for all input dicts"""
 
     dicts = [
         to_data_dict(dct, i) for i, dct in enumerate(dicts)
@@ -393,6 +410,15 @@ def override_param(
         value: value to put
         only_on_conflict: perform operation only on conflict in the param
 
+    >>> t1 = dict(main=dict(a=1, b=['2', '3'], c=2))
+    >>> t2 = dict(main=dict(a=1, b=['3', '4'], c=3))
+    >>> t3 = dict(main=dict(a=1, b=['5'], c=3))
+    >>> u = union_dicts([t1, t2, t3]); u
+    {'main': {'a': TomlValue(map={1: [0, 1, 2]}), 'b': [TomlValue(map={'2': [0]}), TomlValue(map={'3': [0, 1]}), TomlValue(map={'4': [1]}), TomlValue(map={'5': [2]})], 'c': TomlValue(map={2: [0], 3: [1, 2]})}}
+    >>> s=copy.deepcopy(u); override_param(s, route='main.a', value=2); override_param(s, route='main.c', value=4); s
+    {'main': {'a': TomlValue(map={2: [-1]}), 'b': [TomlValue(map={'2': [0]}), TomlValue(map={'3': [0, 1]}), TomlValue(map={'4': [1]}), TomlValue(map={'5': [2]})], 'c': TomlValue(map={4: [-1]})}}
+    >>> s=copy.deepcopy(u); override_param(s, route='main.a', value=2, only_on_conflict=True); override_param(s, route='main.c', value=4); s
+    {'main': {'a': TomlValue(map={1: [0, 1, 2]}), 'b': [TomlValue(map={'2': [0]}), TomlValue(map={'3': [0, 1]}), TomlValue(map={'4': [1]}), TomlValue(map={'5': [2]})], 'c': TomlValue(map={4: [-1]})}}
     """
 
     if '.' not in route:  # no steps inside, perform main action
@@ -400,7 +426,7 @@ def override_param(
             only_on_conflict and
             (
                 route not in dct or
-                len(dct[route]) < 2
+                len(dct[route]) < 2  # only one source -- no conflicts
             )
         ):  # do not override if no conflicts there
             return
@@ -416,7 +442,13 @@ def override_param(
 
 
 def remove_field(dct: Dict, route: str):
-    """removes the field on this route from the dict"""
+    """
+    removes the field on this route from the dict
+
+    >>> d = dict(a=1, b=dict(c=2, d=dict(f=3, e=4)))
+    >>> remove_field(d, 'b.d.e'); d
+    {'a': 1, 'b': {'c': 2, 'd': {'f': 3}}}
+    """
 
     if '.' not in route:  # no steps inside, perform main action
         dct.pop(route, None)  # remove this key from dict
