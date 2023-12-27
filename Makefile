@@ -45,5 +45,6 @@ tag:
 
 release: 
 	bash increase-version.sh 
-	make pypi-package tag
+	make pypi-package
 	bash commit.sh
+	make tag
