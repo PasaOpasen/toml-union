@@ -2,7 +2,7 @@
 VERSION=3
 
 help:
-	venv/bin/python toml_union.py -h
+	venv/bin/python ./toml_union/toml_union.py -h
 
 
 build:
@@ -21,7 +21,7 @@ docker-test:
 	cd examples; bash docker-test.sh
 
 doctest:
-	venv/bin/python -m pytest --doctest-modules ./toml_union.py
+	venv/bin/python -m pytest --doctest-modules ./toml_union/toml_union.py
 
 pytest:
 	venv/bin/python -m pytest ./tests
