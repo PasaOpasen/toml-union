@@ -7,5 +7,5 @@ post="${v##*.}"
 
 (( post += 1 ))
 
-echo "$pre.$post" > version.txt
+echo -n "$pre.$post" > version.txt
 
