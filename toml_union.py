@@ -1,4 +1,8 @@
 
+"""
+python toml_union.py -h
+"""
+
 from typing import Dict, Any, List, Union, Iterable, Callable, Optional
 
 import sys
@@ -279,13 +283,19 @@ def read_toml(file_name: Union[str, os.PathLike]) -> TOML_DICT:
     return content
 
 
-def write_toml(file_name: Union[str, os.PathLike], data: TOML_DICT):
+def write_toml(file_name: Union[str, os.PathLike], data: TOML_DICT, unicode_escape: bool = False):
     """writes dict to toml with some postprocessing"""
     mkdir_of_file(file_name)
     data = enable_lists_dicts(data)
     data = sort_dict(data)
     with open(file_name, 'w', encoding='utf-8') as f:
         toml.dump(data, f)
+
+    if unicode_escape:
+        Path(file_name).write_text(
+            Path(file_name).read_text(encoding='utf-8').encode().decode('unicode_escape').replace('"', "'"),
+            encoding='utf-8'
+        )
 
 
 def write_json(file_name: Union[str, os.PathLike], data: TOML_DICT):
@@ -471,6 +481,7 @@ def toml_union_process(
     remove_fields: Optional[Iterable[str]] = None,
     overrides: Dict[str, Any] = None,
     overrides_on_conflicts: Dict[str, Any] = None,
+    unicode_escape: bool = False
 ) -> None:
     """
     Union several toml files to one
@@ -484,6 +495,7 @@ def toml_union_process(
         overrides: kwargs to override something in result file in form
             "dct1.dct2.key": "value"
         overrides_on_conflicts: same as overrides but will be performed only on conflict fields
+        unicode_escape: whether to escape unicode sequences
 
     """
 
@@ -524,7 +536,7 @@ def toml_union_process(
 
     outdict = to_dict(datas)
     """result shortened dict"""
-    write_toml(outfile, outdict)
+    write_toml(outfile, outdict, unicode_escape=unicode_escape)
 
     if report:
         index_file_map: List[str] = [
@@ -590,6 +602,12 @@ parser.add_argument(
     help='output toml file path',
     dest='outfile'
 )
+
+parser.add_argument(
+    '--unicode-escape', '-u', action='store_true',
+    help='whether to try to escape unicode sequences in the outfile, useful when outfile has many slashes and codes'
+)
+
 parser.add_argument(
     '--report', '-r', action='store', type=str, default=None,
     help='path to report json on failure'
@@ -643,7 +661,8 @@ def main():
         report=parsed.report,
         remove_fields=parsed.remove_fields,
         overrides=parsed.overrides_kwargs,
-        overrides_on_conflicts=parsed.overrides_kwargs_conflict
+        overrides_on_conflicts=parsed.overrides_kwargs_conflict,
+        unicode_escape=parsed.unicode_escape
     )
 
     print()

@@ -204,9 +204,7 @@ Help message:
 
 ```sh
 venv/bin/python toml_union.py -h
-usage: toml_union.py [-h] [--output OUTFILE] [--report REPORT] [--remove-field [REMOVE_FIELDS [REMOVE_FIELDS ...]]]
-                     [--key-value KEY=VALUE] [--ckey-value KEY=VALUE]
-                     INPUT [INPUT ...]
+usage: toml_union.py [-h] [--output OUTFILE] [--unicode-escape] [--report REPORT] [--remove-field [REMOVE_FIELDS [REMOVE_FIELDS ...]]] [--key-value KEY=VALUE] [--ckey-value KEY=VALUE] INPUT [INPUT ...]
 
 Combines several toml files to one with conflicts showing
 
@@ -217,6 +215,7 @@ optional arguments:
   -h, --help            show this help message and exit
   --output OUTFILE, -o OUTFILE
                         output toml file path (default: None)
+  --unicode-escape, -u  whether to try to escape unicode sequences in the outfile, useful when outfile has many slashes and codes (default: False)
   --report REPORT, -r REPORT
                         path to report json on failure (default: None)
   --remove-field [REMOVE_FIELDS [REMOVE_FIELDS ...]], -e [REMOVE_FIELDS [REMOVE_FIELDS ...]]
@@ -225,4 +224,5 @@ optional arguments:
                         Add key/value params. May appear multiple times (default: {})
   --ckey-value KEY=VALUE, -c KEY=VALUE
                         Same as --key-value but will be performed only on conflict cases (default: {})
+
 ```

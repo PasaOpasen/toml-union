@@ -1,0 +1,2 @@
+[aws]
+format = '\[[$symbol($profile)(\($region\))(\[$duration\])]($style)\]'
