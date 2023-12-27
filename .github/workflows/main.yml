@@ -95,10 +95,15 @@ jobs:
         echo "commit message: ${message}"
 
         echo "SKIP_TESTS=no" >> "$GITHUB_OUTPUT"
-        if [ "$(echo ${message} | grep '<>')" != "" ]; then
-          echo "SKIP_TESTS=yes" >> "$GITHUB_OUTPUT"
-          echo "signal of test skipping"
-        fi
+
+        for pattern in "<>" "update to"
+        do
+          if [ "$(echo ${message} | grep "$pattern")" != "" ]; then
+            echo "SKIP_TESTS=yes" >> "$GITHUB_OUTPUT"
+            echo "signal of test skipping"
+            break
+          fi
+        done
 
 
   build-and-test:
@@ -163,5 +168,5 @@ jobs:
       run: |
         make doctest
 
-
+    
         
