@@ -25,3 +25,5 @@ doctest:
 
 pytest:
 	venv/bin/python -m pytest ./tests
+
+autotest: doctest pytest
