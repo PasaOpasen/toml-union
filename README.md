@@ -16,7 +16,7 @@
 pip install toml-union
 ```
 
-This PyPI package is located in one script and combines several `*.toml` files (usially `pyproject.toml`) into one. If it finds some conflict between items, they are kept for manual review.
+This PyPI package is indeed located in one script and combines several `*.toml` files (usially `pyproject.toml`) into one. If it finds some conflicts between items, they will be kept for manual review.
 
 It has a docker image (`docker pull pasaopasen/toml-union`) and an [example](/examples/docker-test.sh) of its usage.
 
