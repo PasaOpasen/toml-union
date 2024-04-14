@@ -29,22 +29,4 @@ pytest:
 autotest: doctest pytest
 
 
-wheel:
-	venv/bin/python setup.py develop
-	venv/bin/python setup.py sdist
-	venv/bin/python setup.py bdist_wheel
 
-wheel-push:
-	bash wheel-push.sh
-
-pypi-package: wheel wheel-push
-
-
-tag:
-	bash tag.sh
-
-release: 
-	bash increase-version.sh 
-	make pypi-package
-	bash commit.sh
-	make tag
