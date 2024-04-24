@@ -108,7 +108,7 @@ requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 ```
 
-to this:
+to this one:
 ```toml
 [build-system]
 build-backend = [ "poetry.core.masonry.api", "poetry.masonry.api",]
@@ -149,7 +149,7 @@ pylint-django = "^2.3.0"
 pytest-django = "^4.5.2"
 ```
 
-As u see, some of packages has confict versions. In this case the report file is created and contains the sources of this conflicts:
+As u see, some of the packages have confict versions. In this case the report file is created and contains the sources of this conflicts:
 ```json
 "pdfminer.six": {
     "^20220524": [

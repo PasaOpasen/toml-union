@@ -1,5 +1,5 @@
 
-VERSION=3
+VERSION=$(shell cat version.txt)
 
 help:
 	venv/bin/python ./toml_union/toml_union.py -h
