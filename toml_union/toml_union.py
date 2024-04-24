@@ -383,15 +383,40 @@ def union_2_data_dicts(d1: DATA_DICT, d2: DATA_DICT) -> DATA_DICT:
     for key, v2 in d2.items():
         if key in d1:
             v1 = d1[key]
-            assert type(v1) is type(v2), f"{key}: incompatible types\n{pprint.pformat(v1)}\n\tand\n{pprint.pformat(v2)}"
+            if type(v1) is type(v2):
 
-            if isinstance(v1, list):
-                d1[key] = TomlValue.union_list(v1 + v2)
-            elif isinstance(v1, dict):
-                d1[key] = union_2_data_dicts(v1, v2)
-            else:
-                assert isinstance(v1, TomlValue)
-                d1[key].update(v2)
+                if isinstance(v1, list):
+                    d1[key] = TomlValue.union_list(v1 + v2)
+                elif isinstance(v1, dict):
+                    d1[key] = union_2_data_dicts(v1, v2)
+                else:
+                    assert isinstance(v1, TomlValue)
+                    v1.update(v2)
+
+                continue
+
+            # special versions case like
+            #   httpx = {extras = ["socks", "brotli", "http2"], version = "^0.26"}
+            #       vs
+            #   httpx = "^0.27.0"
+            if isinstance(v1, (dict, TomlValue)) and isinstance(v2, (dict, TomlValue)):
+                # here -- on object is dict and other is TomlValue
+                if isinstance(v1, dict) and 'version' in v1:
+                    version = v1['version']
+                    if isinstance(version, TomlValue):
+                        version.update(v2)
+                        continue
+
+                if isinstance(v2, dict) and 'version' in v2:
+                    version = v2['version']
+                    if isinstance(version, TomlValue):
+                        version.update(v1)  # update version object
+                        d1[key] = v2  # assign v2 object to v1 dictionary
+                        continue
+
+            raise ValueError(
+                f"{key}: incompatible types\n{pprint.pformat(v1)}\n\tand\n{pprint.pformat(v2)}"
+            )
 
         else:
             d1[key] = v2

@@ -46,3 +46,24 @@ def test_2():
 
     assert d1 == d2
 
+
+def test_3():
+    result = os.path.join(PROJECT_DIR, 'tmp', 'test3.toml')
+
+    toml_union_process(
+        files=[
+            os.path.join(CUR_DIR, 'input', 'test_3')
+        ],
+        outfile=result,
+    )
+
+    d1 = read_toml(result)
+    d2 = read_toml(os.path.join(CUR_DIR, 'output', 'test_3', 'test3.toml'))
+
+    assert d1 == d2
+
+
+if __name__ == '__main__':
+    test_3()
+
+
