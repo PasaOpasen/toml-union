@@ -14,6 +14,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from functools import reduce
 import tempfile
+import pprint
 
 import argparse
 
@@ -382,7 +383,7 @@ def union_2_data_dicts(d1: DATA_DICT, d2: DATA_DICT) -> DATA_DICT:
     for key, v2 in d2.items():
         if key in d1:
             v1 = d1[key]
-            assert type(v1) is type(v2), f"incompatible types {v1} and {v2}"
+            assert type(v1) is type(v2), f"{key}: incompatible types\n{pprint.pformat(v1)}\n\tand\n{pprint.pformat(v2)}"
 
             if isinstance(v1, list):
                 d1[key] = TomlValue.union_list(v1 + v2)
