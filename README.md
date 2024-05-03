@@ -149,7 +149,7 @@ pylint-django = "^2.3.0"
 pytest-django = "^4.5.2"
 ```
 
-As u see, some of the packages have confict versions. In this case the report file is created and contains the sources of this conflicts:
+As u see, some packages have confict versions. In this case the report file is created and contains the sources of this conflicts:
 ```json
 "pdfminer.six": {
     "^20220524": [
