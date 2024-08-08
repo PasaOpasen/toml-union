@@ -617,9 +617,9 @@ class kvdictAppendAction(argparse.Action):
     on the first = and append to a dictionary.
     """
     def __call__(self, parser, args, values, option_string=None):
-        assert(len(values) == 1)
+        assert len(values) == 1
         try:
-            (k, v) = values[0].split("=", 2)
+            k, v = values[0].split("=", 1)
         except ValueError as ex:
             raise argparse.ArgumentError(
                 self, f"could not parse argument \"{values[0]}\" as k=v format"
