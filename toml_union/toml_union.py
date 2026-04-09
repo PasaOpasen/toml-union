@@ -90,10 +90,10 @@ class TomlValue:
         return 'TomlValue  ' + ' ; '.join(f"{k} -> {tuple(v)}" for k, v in self.map.items())
 
     @staticmethod
-    def from_value(value: str, index: int):
+    def from_value(value: Any, index: int):
         """initial constructor"""
         return TomlValue(
-            {value: [index]}
+            {value if isinstance(value, str) else json.dumps(value): [index]}
         )
 
     def add(self, value: str, index: Union[int, List[int]]):
@@ -139,7 +139,10 @@ class TomlValue:
         return d
 
     def to_toml(self) -> Union[str, List[str]]:
-        keys = list(self.map.keys())
+        keys = [
+            json.loads(k) if k.startswith('{') else k
+            for k in self.map.keys()
+        ]
         if len(keys) == 1:
             return keys[0]
         return keys
@@ -222,15 +225,17 @@ def disable_lists_dict(dct: TOML_DICT) -> TOML_DICT:
         for k, v in data.items():
             if isinstance(v, list) and len(v) > 0 and isinstance(v[0], dict):  # it is the list of dicts
 
-                assert all('name' in item for item in v), v
+                if all('name' in item for item in v):
+                    new_dicts = {
+                        f"{k}{SEP}{item['name']}": process({_k: _v for _k, _v in item.items() if _k != 'name'})
+                        for item in v
+                    }
+                    """new dict with processed dicts of list items with updated names"""
+                    d.pop(k)
+                    d.update(new_dicts)
+                else:
+                    assert all('version' in item for item in v), v
 
-                new_dicts = {
-                    f"{k}{SEP}{item['name']}": process({_k: _v for _k, _v in item.items() if _k != 'name'})
-                    for item in v
-                }
-                """new dict with processed dicts of list items with updated names"""
-                d.pop(k)
-                d.update(new_dicts)
             elif isinstance(v, dict):  # go deeper
                 d[k] = process(v)
 
