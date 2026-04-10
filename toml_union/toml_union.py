@@ -93,7 +93,7 @@ class TomlValue:
     def from_value(value: Any, index: int):
         """initial constructor"""
         return TomlValue(
-            {value if isinstance(value, str) else json.dumps(value): [index]}
+            {value if isinstance(value, (str, int, float)) else json.dumps(value): [index]}
         )
 
     def add(self, value: str, index: Union[int, List[int]]):
