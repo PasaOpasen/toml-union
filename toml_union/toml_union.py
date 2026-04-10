@@ -140,7 +140,7 @@ class TomlValue:
 
     def to_toml(self) -> Union[str, List[str]]:
         keys = [
-            json.loads(k) if k.startswith('{') else k
+            json.loads(k) if isinstance(k, str) and k.startswith('{') else k
             for k in self.map.keys()
         ]
         if len(keys) == 1:
