@@ -19,6 +19,7 @@ import pprint
 import argparse
 
 import toml
+import tomli_w
 
 
 #region TYPES
@@ -304,8 +305,8 @@ def write_toml(file_name: Union[str, os.PathLike], data: TOML_DICT, unicode_esca
     mkdir_of_file(file_name)
     data = enable_lists_dicts(data)
     data = sort_dict(data)
-    with open(file_name, 'w', encoding='utf-8') as f:
-        toml.dump(data, f)
+
+    write_text(file_name, tomli_w.dumps(data))
 
     if unicode_escape:
         write_text(
